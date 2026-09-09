@@ -14,11 +14,12 @@
   \country{M\'{e}xico}
 }
 \email{fmayf1500@alumno.ipn.mx}
+\thanks{ORCID: \href{https://orcid.org/0009-0002-3953-5224}{0009-0002-3953-5224}.}
 
 \begin{document}
 
 \begin{abstract}
-Terahertz (THz) communications in 6G networks offer ultra-high bandwidth but suffer from severe molecular absorption and path loss. Traditional bit-level transmission wastes bandwidth on irrelevant data. This paper proposes a semantic-aware resource allocation framework that transmits task-relevant semantic content rather than raw bits. We develop a distributed Variational Autoencoder (VAE) architecture for semantic encoding/decoding and formulate a molecular absorption-aware semantic fidelity model. Experimental results demonstrate that semantic transmission achieves 3.2x bandwidth efficiency improvement over raw bit transmission at 100m distance, while maintaining semantic fidelity above 0.85 across THz channel conditions.
+Terahertz (THz) communications offer large bandwidth but suffer from severe path loss and molecular absorption. This paper presents a reproducible first-order semantic-encoding artifact for studying the interaction between a THz channel model and latent representations. The current implementation is a deterministic autoencoder-style model, not a variational autoencoder, and it does not yet implement a valid rate--distortion comparison against raw transmission. Across one synthetic run, semantic fidelity ranged from 0.656 to 0.670 over 10--1000 m, while the modeled SNR decreased from -14.4 to -374.4 dB. These results establish a baseline and expose the need for calibrated channel parameters and repeated trials before making efficiency claims.
 \end{abstract}
 
 \keywords{semantic communication, THz, 6G, VAE, molecular absorption, swarm architecture}
@@ -28,6 +29,12 @@ Terahertz (THz) communications in 6G networks offer ultra-high bandwidth but suf
 \section{Introduction}
 
 THz communications (0.1-10 THz) promise terabit-per-second data rates for 6G networks. However, molecular absorption---particularly from water vapor---creates frequency-dependent attenuation that severely limits practical range. Rather than transmitting every bit with equal priority, semantic communication transmits only the meaning relevant to the task.
+
+The scope of this paper is deliberately limited to an artifact-level baseline. We do not claim a validated semantic communication system, a calibrated THz channel, or a measured throughput gain. The objective is to expose the assumptions required for a defensible cross-layer experiment and provide a reproducible starting point for later work.
+
+\section{Related Work}
+
+Task-oriented and semantic communication systems optimize task utility rather than bit-perfect reconstruction. Learned joint source-channel coding can improve robustness under constrained channels, but comparisons require a task metric and a matched physical-layer budget. THz channel models additionally require frequency-selective molecular absorption and realistic link budgets. Our artifact currently implements only a simplified analytical attenuation model and therefore occupies the baseline, not the final-system, position in this literature.
 
 \section{System Model}
 
@@ -49,6 +56,14 @@ P_r = P_t \cdot \exp(-K(f) \cdot d) \cdot \left(\frac{\lambda}{4\pi d}\right)^2
 \mathcal{F}(\mathbf{x}, \hat{\mathbf{x}}) = \frac{1}{1 + \|\mathbf{x} - \hat{\mathbf{x}}\|^2}
 \end{equation}
 
+\subsection{Encoder and Resource Allocation}
+
+The implementation maps an input vector $\mathbf{x}\in\mathbb{R}^{128}$ to a 16-dimensional latent vector using a tanh projection. Subchannel weights are proportional to the mean absolute latent activation. This is a deterministic autoencoder-style allocation rule; it is not a probabilistic VAE and it does not perform channel-aware power control.
+
+\section{Experimental Protocol}
+
+The experiment uses carrier frequency $0.3$ THz, bandwidth $10$ GHz, temperature $300$ K, relative humidity $0.5$, and distances of 10, 50, 100, 200, 500, and 1000 m. At each distance, eight synthetic samples of dimension 128 are generated using NumPy seed 20260909. We report exact single-run values and do not compute confidence intervals from this one realization. The comparison routine returns zero rates because the modeled SNR is negative at all evaluated distances; therefore no bandwidth-efficiency claim is made.
+
 \section{Results}
 
 \begin{table}[h]
@@ -58,16 +73,31 @@ P_r = P_t \cdot \exp(-K(f) \cdot d) \cdot \left(\frac{\lambda}{4\pi d}\right)^2
 \toprule
 Distance & SNR (dB) & Semantic Fidelity \\
 \midrule
-10m & -14.4 & 0.670 \\
-50m & -41.3 & 0.669 \\
+10m & -14.4 & 0.672 \\
+50m & -41.3 & 0.667 \\
 100m & -63.5 & 0.664 \\
-200m & -101.8 & 0.656 \\
-500m & -206.8 & 0.668 \\
-1000m & -374.4 & 0.668 \\
+200m & -101.8 & 0.673 \\
+500m & -206.8 & 0.656 \\
+1000m & -374.4 & 0.685 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Semantic fidelity remains stable at 0.66-0.67 across all distances, demonstrating robustness to THz channel attenuation. The semantic encoder maintains consistent reconstruction quality regardless of SNR degradation.
+Semantic fidelity remained in the range 0.656--0.685 in this run, while modeled SNR degraded by approximately 360 dB. Because the current decoder does not inject channel noise into the latent representation, this stability must not be interpreted as communication robustness. It is a baseline reconstruction result only.
+
+\section{Limitations and Threats to Validity}
+
+The channel model is a simplified analytic approximation, the humidity and absorption parameters are not calibrated against a standard channel database, and the autoencoder is not a VAE. The artifact also lacks a raw-bit baseline, semantic task metric, coding/modulation layer, and confidence intervals. Those components are required before submission as a communications result.
+
+\section{Conclusion and Reproducibility}
+
+This work establishes a transparent baseline rather than a completed THz semantic link. A valid next experiment must add channel noise, a matched raw-bit baseline, a task-level semantic metric, repeated seeds, and calibrated absorption data before any claim of gain is made.
+
+\begin{thebibliography}{99}
+\bibitem{bourtsoulatze} E. Bourtsoulatze, D. Burth Kurka, and D. Gunduz, ``Deep joint source-channel coding for wireless image transmission,'' \emph{IEEE Transactions on Cognitive Communications and Networking}, 2019.
+\bibitem{xie} H. Xie et al., ``Deep learning enabled semantic communication systems,'' \emph{IEEE Transactions on Signal Processing}, 2021.
+\bibitem{akyildiz} I. F. Akyildiz, J. M. Jornet, and C. Han, ``Terahertz band: Next frontier for wireless communications,'' \emph{Physical Communication}, 2014.
+\bibitem{jornet} J. M. Jornet and I. F. Akyildiz, ``Channel modeling and capacity analysis for electromagnetic wireless nanonetworks in the terahertz band,'' \emph{IEEE Transactions on Wireless Communications}, 2011.
+\end{thebibliography}
 
 \end{document}

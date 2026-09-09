@@ -140,6 +140,7 @@ class SimulationRunner:
 
 
 if __name__ == "__main__":
+    np.random.seed(20260909)
     print("=" * 60)
     print("Semantic-Aware THz Communication for 6G Swarms")
     print("WSSE 2026 — Simulation Runner")
